@@ -70,7 +70,7 @@ local Tabs = {
 -- 4. CHARGEUR DE MODULES
 local function LoadModule(fileName, tabRef)
     -- N'OUBLIE PAS DE METTRE TON PSEUDO GITHUB ICI !
-    local url = "https://raw.githubusercontent.com/TON_PSEUDO/MaXixHuX/main/" .. fileName
+    local url = "https://raw.githubusercontent.com/CommandoMax/MaXixHuX/main/" .. fileName
     local success, result = pcall(function() return loadstring(game:HttpGet(url))() end)
     
     if success and type(result) == "function" then
