@@ -1,5 +1,5 @@
 -- ========================================================================
--- MAXIX HUX V14.1 - TRUE ARSENAL (150+ FONCTIONS UNIQUES)
+-- MAXIX HUX V15 - TRUE ARSENAL (EDITION PREMIUM)
 -- ========================================================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -16,6 +16,15 @@ getgenv().Toggles = {}
 getgenv().TargetPlayer = nil
 getgenv().HitboxSize = 5
 getgenv().SpamText = "MaXix HuX domine !"
+getgenv().Tracers = {} -- Table pour stocker les lignes de l'ESP
+
+-- Nettoyage des Tracers si un joueur quitte le serveur
+Players.PlayerRemoving:Connect(function(player)
+    if getgenv().Tracers[player] then
+        getgenv().Tracers[player]:Remove()
+        getgenv().Tracers[player] = nil
+    end
+end)
 
 -- ========================================================================
 -- 1. BULLE FLOTTANTE MOBILE
@@ -25,14 +34,14 @@ local function CreateBubble()
     pcall(function() if CoreGui:FindFirstChild("RobloxGui") then uiParent = CoreGui end end)
     if not uiParent then uiParent = LocalPlayer:WaitForChild("PlayerGui") end
     if uiParent:FindFirstChild("MaXixBubble") then uiParent.MaXixBubble:Destroy() end
-    
+
     local BubbleGui = Instance.new("ScreenGui", uiParent); BubbleGui.Name = "MaXixBubble"; BubbleGui.ResetOnSpawn = false
     local BubbleButton = Instance.new("ImageButton", BubbleGui); BubbleButton.Size = UDim2.new(0, 45, 0, 45); BubbleButton.Position = UDim2.new(0.5, 0, 0.05, 0)
     BubbleButton.BackgroundColor3 = Color3.fromRGB(15, 15, 18); BubbleButton.Image = "rbxassetid://15017260580"
     BubbleButton.BackgroundTransparency = 0.3; BubbleButton.ImageTransparency = 0.3
     Instance.new("UICorner", BubbleButton).CornerRadius = UDim.new(1, 0)
     local stroke = Instance.new("UIStroke", BubbleButton); stroke.Color = Color3.fromRGB(99, 102, 241); stroke.Thickness = 2; stroke.Transparency = 0.3
-    
+
     local dragging, dragStart, startPos
     BubbleButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -62,7 +71,7 @@ CreateBubble()
 -- ========================================================================
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local Window = Fluent:CreateWindow({
-    Title = "MaXix HuX", SubTitle = "V14.1 True Arsenal", 
+    Title = "MaXix HuX", SubTitle = "V15 Premium Arsenal", 
     TabWidth = 130, Size = UDim2.fromOffset(580, 420), 
     Acrylic = true, Theme = "Darker", MinimizeKey = Enum.KeyCode.RightControl
 })
@@ -127,7 +136,9 @@ Tabs.Mouv:AddButton({Title="Preset Saut : Normal (50)", Callback=function() Loca
 -- ========================================================================
 -- 5. COMBAT (15)
 -- ========================================================================
+Tabs.Combat:AddSection("Assistances de Tir")
 Tabs.Combat:AddToggle("Aimbot", {Title="Aimbot (Cam Lock)", Default=false}):OnChanged(function(v) getgenv().Toggles.Aimbot = v end)
+Tabs.Combat:AddToggle("TriggerBot", {Title="TriggerBot (Tir Auto au survol)", Default=false}):OnChanged(function(v) getgenv().Toggles.TriggerBot = v end)
 Tabs.Combat:AddToggle("Hitbox", {Title="Activer Hitbox Expander", Default=false}):OnChanged(function(v) getgenv().Toggles.Hitbox = v end)
 Tabs.Combat:AddToggle("AuraFling", {Title="Aura Fling (Tornade)", Default=false}):OnChanged(function(v) getgenv().Toggles.AuraFling = v end)
 
@@ -145,8 +156,12 @@ Tabs.Combat:AddButton({Title="Preset FOV : Normal (70)", Callback=function() Cam
 -- ========================================================================
 -- 6. VISUELS (25)
 -- ========================================================================
+Tabs.Vis:AddSection("ESP (Extrasensoriel)")
 Tabs.Vis:AddToggle("EspBox", {Title="ESP Boxes (Chams Rouges)", Default=false}):OnChanged(function(v) getgenv().Toggles.EspBox = v end)
 Tabs.Vis:AddToggle("EspName", {Title="ESP Noms", Default=false}):OnChanged(function(v) getgenv().Toggles.EspName = v end)
+Tabs.Vis:AddToggle("EspTracer", {Title="ESP Tracers (Lignes vers joueurs)", Default=false}):OnChanged(function(v) getgenv().Toggles.EspTracer = v end)
+
+Tabs.Vis:AddSection("Monde")
 Tabs.Vis:AddToggle("Fullbright", {Title="Vision Nocturne", Default=false}):OnChanged(function(v) Lighting.GlobalShadows = not v; Lighting.Brightness = v and 3 or 1 end)
 Tabs.Vis:AddToggle("Xray", {Title="X-Ray (Murs transparents)", Default=false}):OnChanged(function(v) for _,p in pairs(Workspace:GetDescendants()) do if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.LocalTransparencyModifier = v and 0.5 or 0 end end end)
 Tabs.Vis:AddToggle("NoFog", {Title="Supprimer Brouillard", Default=false}):OnChanged(function(v) Lighting.FogEnd = v and 100000 or 1000 end)
@@ -157,11 +172,6 @@ Tabs.Vis:AddButton({Title="Filtre : Bleu Océan", Callback=function() for _,v in
 Tabs.Vis:AddButton({Title="Filtre : Nuit Noire", Callback=function() for _,v in pairs(Lighting:GetChildren()) do if v.Name=="MaxFiltre" then v:Destroy() end end local cc = Instance.new("ColorCorrectionEffect", Lighting); cc.Name = "MaxFiltre"; cc.TintColor = Color3.new(0,0,0) end})
 Tabs.Vis:AddButton({Title="Filtre : Normal (Reset)", Callback=function() for _,v in pairs(Lighting:GetChildren()) do if v.Name=="MaxFiltre" then v:Destroy() end end end})
 
-Tabs.Vis:AddSection("Horloge du Jeu")
-Tabs.Vis:AddButton({Title="Heure : Aube (6:00)", Callback=function() Lighting.ClockTime = 6 end})
-Tabs.Vis:AddButton({Title="Heure : Midi (12:00)", Callback=function() Lighting.ClockTime = 12 end})
-Tabs.Vis:AddButton({Title="Heure : Minuit (0:00)", Callback=function() Lighting.ClockTime = 0 end})
-
 -- ========================================================================
 -- 7. AVATAR / JOUEUR (25)
 -- ========================================================================
@@ -169,7 +179,6 @@ Tabs.Avatar:AddSection("Pouvoirs Divins")
 Tabs.Avatar:AddToggle("GodMode", {Title="God Mode (Boucle de Soin)", Default=false}):OnChanged(function(v) getgenv().Toggles.GodMode = v end)
 Tabs.Avatar:AddToggle("Intouchable", {Title="Intouchable (Anti-Menottes/Grab)", Default=false}):OnChanged(function(v) 
     getgenv().Toggles.Intouchable = v 
-    -- Si désactivé, on remet les collisions normales aux pièces
     if not v and LocalPlayer.Character then
         for _, part in pairs(LocalPlayer.Character:GetChildren()) do
             if part:IsA("BasePart") then part.CanTouch = true end
@@ -202,12 +211,16 @@ Tabs.Map:AddButton({Title="Détruire KillBricks (Lave/Acide)", Callback=function
 Tabs.Map:AddButton({Title="Détruire Murs Invisibles", Callback=function() local c=0 for _,v in pairs(Workspace:GetDescendants()) do if v:IsA("BasePart") and v.Transparency >= 1 and v.CanCollide and v.Name~="HumanoidRootPart" then v:Destroy() c=c+1 end end Fluent:Notify({Title="Map", Content=c.." murs détruits.", Duration=2}) end})
 Tabs.Map:AddButton({Title="Détruire les Portes", Callback=function() for _,v in pairs(Workspace:GetDescendants()) do if v:IsA("Model") and string.find(string.lower(v.Name), "door") then v:Destroy() end end end})
 Tabs.Map:AddButton({Title="Supprimer toutes les Textures", Callback=function() for _,v in pairs(Workspace:GetDescendants()) do if v:IsA("Texture") or v:IsA("Decal") then v:Destroy() end end end})
-Tabs.Map:AddButton({Title="Supprimer l'Eau du terrain", Callback=function() Workspace.Terrain:Clear() end})
 
 Tabs.Map:AddSection("Exploits Gravité & BTools")
-Tabs.Map:AddToggle("AntiVoid", {Title="Anti-Void (Plateforme sécurité)", Default=false}):OnChanged(function(v) if v then local p = Instance.new("Part", Workspace); p.Name="MaXixV"; p.Size=Vector3.new(5000,5,5000); p.Position=Vector3.new(0,-50,0); p.Anchored=true; p.Transparency=0.5 else if Workspace:FindFirstChild("MaXixV") then Workspace.MaXixV:Destroy() end end end)
+Tabs.Map:AddToggle("AntiVoid", {Title="Anti-Void (Plateforme sécurité)", Default=false}):OnChanged(function(v) 
+    if v then 
+        local p = Instance.new("Part", Workspace); p.Name="MaXixV"; p.Size=Vector3.new(5000,5,5000); p.Position=Vector3.new(0,-50,0); p.Anchored=true; p.Transparency=0.5 
+    elseif Workspace:FindFirstChild("MaXixV") then 
+        Workspace.MaXixV:Destroy() 
+    end 
+end)
 Tabs.Map:AddButton({Title="BTools (Outils de construction)", Callback=function() local t = Instance.new("HopperBin"); t.BinType = 1; t.Parent = LocalPlayer.Backpack end})
-Tabs.Map:AddButton({Title="Gravité : Lune (50)", Callback=function() Workspace.Gravity = 50 end})
 Tabs.Map:AddButton({Title="Gravité : Zéro (0)", Callback=function() Workspace.Gravity = 0 end})
 Tabs.Map:AddButton({Title="Gravité : Normale (196.2)", Callback=function() Workspace.Gravity = 196.2 end})
 
@@ -216,26 +229,34 @@ Tabs.Map:AddButton({Title="Gravité : Normale (196.2)", Callback=function() Work
 -- ========================================================================
 local PlayerDropdown = Tabs.Troll:AddDropdown("PlayerSelect", {Title = "Cible Actuelle", Values = {"Aucun"}, Multi = false, Default = 1, Callback = function(v) getgenv().TargetPlayer = Players:FindFirstChild(v) end})
 Tabs.Troll:AddButton({Title="Rafraîchir Liste Serveur", Callback=function() local l={}; for _,p in pairs(Players:GetPlayers()) do if p~=LocalPlayer then table.insert(l, p.Name) end end if #l==0 then table.insert(l,"Aucun") end PlayerDropdown:SetValues(l) Fluent:Notify({Title="Troll", Content="Liste Actualisée", Duration=1}) end})
+
+Tabs.Troll:AddSection("Actions sur la Cible")
 Tabs.Troll:AddButton({Title="TP sur la Cible", Callback=function() if getgenv().TargetPlayer and getgenv().TargetPlayer.Character then LocalPlayer.Character:PivotTo(getgenv().TargetPlayer.Character:GetPivot()) end end})
 Tabs.Troll:AddButton({Title="Spectate Cible", Callback=function() if getgenv().TargetPlayer and getgenv().TargetPlayer.Character then Camera.CameraSubject = getgenv().TargetPlayer.Character.Humanoid end end})
 Tabs.Troll:AddButton({Title="Arrêter Spectate", Callback=function() Camera.CameraSubject = LocalPlayer.Character.Humanoid end})
 Tabs.Troll:AddToggle("LoopTP", {Title="Loop TP (S'attacher à la cible)", Default=false}):OnChanged(function(v) getgenv().Toggles.LoopTP = v end)
+
+Tabs.Troll:AddSection("Destruction Globale")
+Tabs.Troll:AddToggle("InvisFling", {Title="Fling Furtif (Invisible + Destructeur)", Default=false}):OnChanged(function(v) 
+    getgenv().Toggles.InvisFling = v 
+    if not v and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.RotVelocity = Vector3.new(0, 0, 0)
+        for _, p in pairs(LocalPlayer.Character:GetDescendants()) do
+            if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = 0 end
+        end
+    end
+end)
 
 -- ========================================================================
 -- 10. FUN & SPAMMER (15)
 -- ========================================================================
 Tabs.Fun:AddSection("Emotes")
 Tabs.Fun:AddButton({Title="Emote : Danse 1", Callback=function() game:GetService("Chat"):InvokeServer("/e dance") end})
-Tabs.Fun:AddButton({Title="Emote : Danse 2", Callback=function() game:GetService("Chat"):InvokeServer("/e dance2") end})
 Tabs.Fun:AddButton({Title="Emote : Rire", Callback=function() game:GetService("Chat"):InvokeServer("/e laugh") end})
-Tabs.Fun:AddButton({Title="Emote : Applaudir", Callback=function() game:GetService("Chat"):InvokeServer("/e cheer") end})
 
 Tabs.Fun:AddSection("Chat Spammer")
 Tabs.Fun:AddToggle("SpamOn", {Title="Activer Chat Spammer", Default=false}):OnChanged(function(v) getgenv().Toggles.Spam = v end)
 Tabs.Fun:AddInput("SpamText", {Title="Texte Personnalisé", Default="MaXix HuX gère !", Numeric=false, Finished=true, Callback=function(v) getgenv().SpamText = v end})
-Tabs.Fun:AddButton({Title="Preset Spam : Je vole !", Callback=function() getgenv().SpamText = "Regardez-moi, je vole ! (MaXix HuX)" end})
-Tabs.Fun:AddButton({Title="Preset Spam : EZ Win", Callback=function() getgenv().SpamText = "EZ Win, serveur dominé." end})
-Tabs.Fun:AddButton({Title="Preset Spam : Tornade", Callback=function() getgenv().SpamText = "Attention, la tornade mortelle arrive !" end})
 
 task.spawn(function() 
     while task.wait(2) do 
@@ -253,7 +274,6 @@ Tabs.Hubs:AddSection("Charger d'autres gros scripts (Directement)")
 Tabs.Hubs:AddButton({Title="Charger SimpleSpy V3 (New)", Callback=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))() end})
 Tabs.Hubs:AddButton({Title="Charger Infinite Yield", Callback=function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() end})
 Tabs.Hubs:AddButton({Title="Charger Nameless Admin (New)", Callback=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))() end})
-Tabs.Hubs:AddButton({Title="Charger Dex Explorer V2", Callback=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Spaceexx/Scripts/main/DexV2"))() end})
 Tabs.Hubs:AddButton({Title="Charger Dark Dex", Callback=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))() end})
 
 -- ========================================================================
@@ -265,39 +285,53 @@ Tabs.Secu:AddButton({Title="Ouvrir Console (F9)", Callback=function() game:GetSe
 Tabs.Secu:AddButton({Title="Copier JobID Serveur", Callback=function() setclipboard(tostring(game.JobId)) Fluent:Notify({Title="Succès", Content="JobID Copié", Duration=2}) end})
 Tabs.Secu:AddButton({Title="Changer de Serveur (Server Hop)", Callback=function() game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer) end})
 Tabs.Secu:AddButton({Title="Détruire le Menu", Callback=function() if CoreGui:FindFirstChild("MaXixBubble") then CoreGui.MaXixBubble:Destroy() end Fluent:Destroy() end})
-Tabs.Secu:AddButton({Title="Crash Jeu (Panic Button)", Callback=function() game:Shutdown() end})
 
 -- ========================================================================
--- BOUCLE MAÎTRESSE
+-- BOUCLE MAÎTRESSE (CORE LOOP)
 -- ========================================================================
 UserInputService.JumpRequest:Connect(function() if getgenv().Toggles.InfJ and LocalPlayer.Character then LocalPlayer.Character.Humanoid:ChangeState("Jumping") end end)
 
+local lastClick = 0
 RunService.RenderStepped:Connect(function()
     local char = LocalPlayer.Character
     if not char then return end
-    
-    -- GOD MODE
-    if getgenv().Toggles.GodMode and char:FindFirstChild("Humanoid") then
-        char.Humanoid.Health = char.Humanoid.MaxHealth
-    end
 
-    -- INTOUCHABLE
-    if getgenv().Toggles.Intouchable then
-        for _, part in pairs(char:GetChildren()) do
-            if part:IsA("BasePart") then part.CanTouch = false end
-        end
-    end
+    -- GOD MODE & INTOUCHABLE
+    if getgenv().Toggles.GodMode and char:FindFirstChild("Humanoid") then char.Humanoid.Health = char.Humanoid.MaxHealth end
+    if getgenv().Toggles.Intouchable then for _, part in pairs(char:GetChildren()) do if part:IsA("BasePart") then part.CanTouch = false end end end
 
+    -- MOUVEMENTS & TROLL
     if getgenv().Toggles.Noc then for _, p in pairs(char:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end end
     if getgenv().Toggles.Fly and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.Velocity = Vector3.new(0, 50, 0) end
     if getgenv().Toggles.Spin and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(50), 0) end
     if getgenv().Toggles.AuraFling and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(90), 0) end
     if getgenv().Toggles.LoopTP and getgenv().TargetPlayer and getgenv().TargetPlayer.Character and getgenv().TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.CFrame = getgenv().TargetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2) end
+    
+    -- FLING FURTIF (NOUVEAU)
+    if getgenv().Toggles.InvisFling and char:FindFirstChild("HumanoidRootPart") then
+        for _, p in pairs(char:GetDescendants()) do
+            if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = 1; p.CanCollide = false end
+        end
+        char.HumanoidRootPart.RotVelocity = Vector3.new(0, 999999, 0) -- Rotation extrême pour propulser
+    end
+
     if getgenv().Toggles.Jesus then
         if not char:FindFirstChild("JesusP") then local p = Instance.new("Part", char); p.Name="JesusP"; p.Size=Vector3.new(4,1,4); p.Transparency=1; local w = Instance.new("Weld", p); w.Part0=p; w.Part1=char.HumanoidRootPart; w.C0=CFrame.new(0,3.5,0) end
         if char:FindFirstChild("JesusP") then char.JesusP.CanCollide = true end
-    else if char:FindFirstChild("JesusP") then char.JesusP:Destroy() end end
-    
+    elseif char:FindFirstChild("JesusP") then char.JesusP:Destroy() end
+
+    -- TRIGGERBOT (NOUVEAU)
+    if getgenv().Toggles.TriggerBot and typeof(mouse1click) == "function" then
+        local target = Mouse.Target
+        if target and target.Parent and target.Parent:FindFirstChild("Humanoid") and target.Parent.Name ~= LocalPlayer.Name then
+            if tick() - lastClick > 0.1 then -- Limite de clics pour éviter de lagger
+                mouse1click()
+                lastClick = tick()
+            end
+        end
+    end
+
+    -- AIMBOT
     if getgenv().Toggles.Aimbot then
         local closest, maxD = nil, math.huge
         for _, p in pairs(Players:GetPlayers()) do
@@ -308,18 +342,17 @@ RunService.RenderStepped:Connect(function()
         end
         if closest then Camera.CFrame = CFrame.new(Camera.CFrame.Position, closest.Character.Head.Position) end
     end
-    
-    if getgenv().Toggles.Hitbox then
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then 
+
+    -- HITBOX & ESP (Boucle des joueurs)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            -- Hitbox
+            if getgenv().Toggles.Hitbox and p.Character:FindFirstChild("Head") then 
                 p.Character.Head.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
                 p.Character.Head.Transparency = 0.5; p.Character.Head.CanCollide = false 
             end
-        end
-    end
-    
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character then
+
+            -- ESP Box & Name
             if getgenv().Toggles.EspBox and not p.Character:FindFirstChild("MaXixCham") then local hl = Instance.new("Highlight", p.Character); hl.Name = "MaXixCham"; hl.FillColor = Color3.fromRGB(255, 0, 0); hl.FillTransparency = 0.5
             elseif not getgenv().Toggles.EspBox and p.Character:FindFirstChild("MaXixCham") then p.Character.MaXixCham:Destroy() end
             
@@ -329,9 +362,31 @@ RunService.RenderStepped:Connect(function()
             elseif not getgenv().Toggles.EspName and p.Character:FindFirstChild("Head") and p.Character.Head:FindFirstChild("MaXixName") then
                 p.Character.Head.MaXixName:Destroy()
             end
+
+            -- ESP TRACERS (NOUVEAU - Dessin direct sur l'écran)
+            if getgenv().Toggles.EspTracer and p.Character:FindFirstChild("HumanoidRootPart") then
+                local vector, onScreen = Camera:WorldToViewportPoint(p.Character.HumanoidRootPart.Position)
+                if not getgenv().Tracers[p] then
+                    getgenv().Tracers[p] = Drawing.new("Line")
+                    getgenv().Tracers[p].Thickness = 1.5
+                    getgenv().Tracers[p].Color = Color3.fromRGB(255, 0, 50)
+                end
+                
+                if onScreen then
+                    getgenv().Tracers[p].Visible = true
+                    getgenv().Tracers[p].From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y) -- Bas de l'écran centré
+                    getgenv().Tracers[p].To = Vector2.new(vector.X, vector.Y)
+                else
+                    getgenv().Tracers[p].Visible = false
+                end
+            else
+                if getgenv().Tracers[p] then
+                    getgenv().Tracers[p].Visible = false
+                end
+            end
         end
     end
 end)
 
 Window:SelectTab(1)
-Fluent:Notify({Title = "MaXix HuX V14.1", Content = "True Arsenal + Nouveautés chargées !", Duration = 5})
+Fluent:Notify({Title = "MaXix HuX V15", Content = "Édition Premium : Tracers & TriggerBot ajoutés !", Duration = 5})
