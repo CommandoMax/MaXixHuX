@@ -147,7 +147,7 @@ Tabs.Combat:AddButton({Title="Preset FOV : Normal (70)", Callback=function() Cam
 -- ========================================================================
 Tabs.Vis:AddToggle("EspBox", {Title="ESP Boxes (Chams Rouges)", Default=false}):OnChanged(function(v) getgenv().Toggles.EspBox = v end)
 Tabs.Vis:AddToggle("EspName", {Title="ESP Noms", Default=false}):OnChanged(function(v) getgenv().Toggles.EspName = v end)
-Tabs.Vis:AddToggle("Fullbright", {Title="Vision Nocturne", Default=false}):OnChanged(function(v) Lighting.GlobalShadows = not v; Lighting.Brightness = v and 3 or 1 end})
+Tabs.Vis:AddToggle("Fullbright", {Title="Vision Nocturne", Default=false}):OnChanged(function(v) Lighting.GlobalShadows = not v; Lighting.Brightness = v and 3 or 1 end)
 Tabs.Vis:AddToggle("Xray", {Title="X-Ray (Murs transparents)", Default=false}):OnChanged(function(v) for _,p in pairs(Workspace:GetDescendants()) do if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.LocalTransparencyModifier = v and 0.5 or 0 end end end)
 Tabs.Vis:AddToggle("NoFog", {Title="Supprimer Brouillard", Default=false}):OnChanged(function(v) Lighting.FogEnd = v and 100000 or 1000 end)
 
