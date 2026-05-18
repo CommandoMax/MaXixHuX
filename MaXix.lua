@@ -250,7 +250,7 @@ end)
 -- 11. HUBS EXTERNES (10)
 -- ========================================================================
 Tabs.Hubs:AddSection("Charger d'autres gros scripts (Directement)")
-Tabs.Hubs:AddButton({Title="Charger SimpleSpy V3 (New)", Callback=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/exunys/SimpleSpy/main/SimpleSpy.lua"))() end})
+Tabs.Hubs:AddButton({Title="Charger SimpleSpy V3 (New)", Callback=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpySource.lua"))() end})
 Tabs.Hubs:AddButton({Title="Charger Infinite Yield", Callback=function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() end})
 Tabs.Hubs:AddButton({Title="Charger Nameless Admin (New)", Callback=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))() end})
 Tabs.Hubs:AddButton({Title="Charger Dex Explorer V2", Callback=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Spaceexx/Scripts/main/DexV2"))() end})
